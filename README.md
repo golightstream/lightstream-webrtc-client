@@ -1,12 +1,8 @@
 # Lightstream WebRTC Client  
 
----
-
 A frontend WebRTC wrapper for Lightstream Cloud.
 
 ## Documentation
-
----
 
 This client uses the following tools:
 
