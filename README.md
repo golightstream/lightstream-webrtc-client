@@ -13,8 +13,6 @@ This client uses the following tools:
 
 `import * as webrtc from 'infiniscene-webrtc-client'`
 
-_Core functions_
-
 **webrtc.startRoom(`settings: RoomSettings, id: string`)**  
 **webrtc.deleteRoom()**
 
