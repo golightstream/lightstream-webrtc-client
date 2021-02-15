@@ -1,12 +1,21 @@
-const path = require('path')
+const esbuild = require('esbuild')
 
-module.exports = {
-  entry: './src/webrtc.js',
-  mode: 'production',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js',
-    library: 'lightstreamWebrtcClient',
-    libraryTarget: 'umd',
-  },
-}
+esbuild
+  .build({
+    platform: 'browser',
+    define: {
+      'process.env.NODE_ENV': JSON.stringify('production'),
+    },
+    entryPoints: ['src/webrtc'],
+    format: 'esm',
+    minify: true,
+    bundle: true,
+    sourcemap: false,
+    globalName: 'window',
+    tsconfig: './tsconfig.json',
+    target: 'es6',
+    outfile: 'dist/main.js',
+  })
+  .catch((e) => {
+    console.warn(e)
+  })

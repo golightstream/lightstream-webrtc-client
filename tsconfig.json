@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "strictFunctionTypes": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "pretty": true,
+    "jsx": "react",
+    "baseUrl": "./",
+    "lib": [
+      "es2015",
+      "es2017",
+      "dom",
+      "esnext"
+    ],
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "target": "ES6"
+  },
+}
