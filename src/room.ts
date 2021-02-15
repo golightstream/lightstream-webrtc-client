@@ -13,9 +13,7 @@ import {
   AudioDefinition,
   RoomMachineEvent,
   RoomNotificationEvent,
-  Video,
   MediaActor,
-  MediaAddedEvent,
 } from './index'
 import { mediaMachine } from './media'
 
