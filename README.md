@@ -15,15 +15,15 @@ This client uses the following tools:
 
 _Core functions_
 
-**startRoom(`settings: RoomSettings, id: string`)**  
-**deleteRoom()**
+**webrtc.startRoom(`settings: RoomSettings, id: string`)**  
+**webrtc.deleteRoom()**
 
 _Helpers_
 
-**watchDevices()**  
-**ensureDevicePermissions()**  
-**getDevicePermissions()**  
-**getUserMedia()**
+**webrtc.watchDevices()**  
+**webrtc.ensureDevicePermissions()**  
+**webrtc.getDevicePermissions()**  
+**webrtc.getUserMedia()**  
 
 ### Room
 
