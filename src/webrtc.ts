@@ -86,6 +86,8 @@ type RoomConfig = {
   peerId?: RoomMachineContext['peerId']
   peerInfo?: RoomMachineContext['peerInfo']
   settings?: RoomMachineContext['settings']
+  hostname?: string
+  port?: number
 }
 
 export const startRoom = ({
@@ -93,15 +95,17 @@ export const startRoom = ({
   peerId,
   peerInfo = {},
   settings = {},
+  hostname,
+  port,
 }: RoomConfig) => {
   if (id && rooms.get(id)) return rooms.get(id)
   id = id || generateID()
   peerId = peerId || generateID()
 
   // TODO: Pull from config
-  const hostname = window.location.hostname
-  const port = 4443
-  const socketUrl = `wss://${hostname}:${port}/?roomId=${id}&peerId=${peerId}`
+  hostname = hostname || window.location.hostname
+  port = port || 3443
+  const socketUrl = `wss://${hostname}:${port}/?room-id=${id}&peer-id=${peerId}`
   const onDiagnostics: RoomMachineContext['onDiagnostics'] = (
     notification,
   ) => {
