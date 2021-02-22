@@ -1,8 +1,4 @@
-import {
-  interpret,
-  Interpreter,
-  State,
-} from 'xstate'
+import { interpret, Interpreter, State } from 'xstate'
 import bowser from 'bowser'
 import {
   Browser,
@@ -24,16 +20,11 @@ export const getBrowserInfo = () => {
   const browser = bowser.getParser(ua)
   let flag
 
-  if (browser.satisfies({ chrome: '>=0', chromium: '>=0' }))
-    flag = 'chrome'
-  else if (browser.satisfies({ firefox: '>=0' }))
-    flag = 'firefox'
-  else if (browser.satisfies({ safari: '>=0' }))
-    flag = 'safari'
-  else if (browser.satisfies({ opera: '>=0' }))
-    flag = 'opera'
-  else if (browser.satisfies({ 'microsoft edge': '>=0' }))
-    flag = 'edge'
+  if (browser.satisfies({ chrome: '>=0', chromium: '>=0' })) flag = 'chrome'
+  else if (browser.satisfies({ firefox: '>=0' })) flag = 'firefox'
+  else if (browser.satisfies({ safari: '>=0' })) flag = 'safari'
+  else if (browser.satisfies({ opera: '>=0' })) flag = 'opera'
+  else if (browser.satisfies({ 'microsoft edge': '>=0' })) flag = 'edge'
   else flag = 'unknown'
 
   return {
@@ -44,14 +35,10 @@ export const getBrowserInfo = () => {
 }
 
 const numberToHex = (x: number) => x.toString(16)
-const randomHexChar = () =>
-  numberToHex(Math.random() * 16)[0]
+const randomHexChar = () => numberToHex(Math.random() * 16)[0]
 export const generateID = () => {
   const d = Math.round(Date.now() / 1000)
-  return `${d}${Array(10)
-    .fill('')
-    .map(randomHexChar)
-    .join('')}`
+  return `${d}${Array(10).fill('').map(randomHexChar).join('')}`
 }
 
 const formatState = (state: State<any, any>) => ({
@@ -106,9 +93,7 @@ export const startRoom = ({
   hostname = hostname || window.location.hostname
   port = port || 3443
   const socketUrl = `wss://${hostname}:${port}/?room-id=${id}&peer-id=${peerId}`
-  const onDiagnostics: RoomMachineContext['onDiagnostics'] = (
-    notification,
-  ) => {
+  const onDiagnostics: RoomMachineContext['onDiagnostics'] = (notification) => {
     if (typeof API?.onDiagnostics === 'function') {
       API?.onDiagnostics(notification)
     }
@@ -118,6 +103,7 @@ export const startRoom = ({
     id,
     peers: [],
     media: [],
+    chat: [],
     protoo: null,
     sendTransport: null,
     recvTransport: null,
@@ -134,9 +120,7 @@ export const startRoom = ({
     },
   } as RoomMachineContext
 
-  const room = interpret(
-    roomMachine.withContext(config),
-  ).start()
+  const room = interpret(roomMachine.withContext(config)).start()
 
   const sendCommand = (command: RoomCommand) => {
     room.send({
@@ -151,10 +135,8 @@ export const startRoom = ({
   ) => {
     if (kind !== media.kind) return false
     if (type !== 'any' && type !== media.type) return false
-    if (deviceId !== 'any' && deviceId !== media.deviceId)
-      return false
-    if (peerId !== 'any' && peerId !== media.peerId)
-      return false
+    if (deviceId !== 'any' && deviceId !== media.deviceId) return false
+    if (peerId !== 'any' && peerId !== media.peerId) return false
     return true
   }
 
@@ -166,10 +148,7 @@ export const startRoom = ({
     media: Media
     available: boolean
   }[]
-  const watchers = new Map<
-    (media?: Media) => void,
-    WatcherSettings
-  >()
+  const watchers = new Map<(media?: Media) => void, WatcherSettings>()
 
   // Has side-effects
   const getActiveMediaForWatcher = (
@@ -179,17 +158,14 @@ export const startRoom = ({
     // See if the active media is still available
     if (settings.active) {
       const stillActive = mediaList.some(
-        (x) =>
-          x.media.id === settings.active.id && x.available,
+        (x) => x.media.id === settings.active.id && x.available,
       )
       // Do nothing
       if (stillActive) return
     }
     // If it's not, try to find another one
     const nowActive = mediaList.find(
-      (x) =>
-        x.available &&
-        mediaMatchesWatchOptions(x.media, settings.options),
+      (x) => x.available && mediaMatchesWatchOptions(x.media, settings.options),
     )
     // Set the new active media for reference on next change
     settings.active = nowActive?.media
@@ -199,10 +175,7 @@ export const startRoom = ({
   const onMediaChange = () => {
     const mediaList = getMediaList()
     watchers.forEach((settings, cb) => {
-      const nowActive = getActiveMediaForWatcher(
-        mediaList,
-        settings,
-      )
+      const nowActive = getActiveMediaForWatcher(mediaList, settings)
 
       // Only callback if we have a valid media for the watcher
       if (nowActive) {
@@ -281,22 +254,20 @@ export const startRoom = ({
       sendCommand({
         name: 'RestartIce',
       }),
+    SendChatMessage: (payload) =>
+      sendCommand({
+        name: 'SendChatMessage',
+        payload,
+      }),
     getMedia: (mediaId) => {
-      const media = room.state.context.media.find(
-        (x) => x.id === mediaId,
-      )
+      const media = room.state.context.media.find((x) => x.id === mediaId)
       if (!media) return null
       return formatState(media.actor.state)
     },
     useMedia: (mediaId, cb) => {
-      const media = room.state.context.media.find(
-        (x) => x.id === mediaId,
-      )
+      const media = room.state.context.media.find((x) => x.id === mediaId)
       if (!media) return () => {}
-      return useObservable<MediaMachineContext>(
-        media.actor,
-        cb,
-      )
+      return useObservable<MediaMachineContext>(media.actor, cb)
     },
     getState: () => {
       return formatState(room.state)
@@ -351,18 +322,11 @@ export const getDevicePermissions = async () => {
   // Get the available device information
   const devices = await navigator.mediaDevices.enumerateDevices()
   // Check each kind for a device ID to determine whether permission has been granted
-  const firstWebcam = devices.find(
-    (x) => x.kind === 'videoinput',
-  )
-  const firstMicrophone = devices.find(
-    (x) => x.kind === 'audioinput',
-  )
+  const firstWebcam = devices.find((x) => x.kind === 'videoinput')
+  const firstMicrophone = devices.find((x) => x.kind === 'audioinput')
   return {
-    video:
-      Boolean(firstWebcam) && Boolean(firstWebcam.deviceId),
-    audio:
-      Boolean(firstMicrophone) &&
-      Boolean(firstMicrophone.deviceId),
+    video: Boolean(firstWebcam) && Boolean(firstWebcam.deviceId),
+    audio: Boolean(firstMicrophone) && Boolean(firstMicrophone.deviceId),
   }
 }
 
@@ -388,10 +352,7 @@ export const ensureDevicePermissions = async () => {
 
 export const watchDevices = (cb: DeviceCallback) => {
   if (deviceWatchers.size === 0) {
-    navigator.mediaDevices.addEventListener(
-      'devicechange',
-      reportDevices,
-    )
+    navigator.mediaDevices.addEventListener('devicechange', reportDevices)
   }
   deviceWatchers.add(cb)
   reportDevices().catch(() => {})
@@ -399,20 +360,13 @@ export const watchDevices = (cb: DeviceCallback) => {
   return () => {
     deviceWatchers.delete(cb)
     if (deviceWatchers.size === 0) {
-      navigator.mediaDevices.removeEventListener(
-        'devicechange',
-        reportDevices,
-      )
+      navigator.mediaDevices.removeEventListener('devicechange', reportDevices)
     }
   }
 }
 
-export const getUserMedia: MediaDevices['getUserMedia'] = async (
-  ...args
-) => {
-  const media = await navigator.mediaDevices.getUserMedia(
-    ...args,
-  )
+export const getUserMedia: MediaDevices['getUserMedia'] = async (...args) => {
+  const media = await navigator.mediaDevices.getUserMedia(...args)
   reportDevices()
   return media
 }
@@ -422,19 +376,13 @@ const reportDevices = async () => {
   const devices = await navigator.mediaDevices.enumerateDevices()
   // TODO: Format device names
   const webcams = permissions.video
-    ? (devices.filter(
-        (x) => x.kind === 'videoinput',
-      ) as Webcam[])
+    ? (devices.filter((x) => x.kind === 'videoinput') as Webcam[])
     : []
   const microphones = permissions.audio
-    ? (devices.filter(
-        (x) => x.kind === 'audioinput',
-      ) as Microphone[])
+    ? (devices.filter((x) => x.kind === 'audioinput') as Microphone[])
     : []
   const speakers = permissions.audio
-    ? (devices.filter(
-        (x) => x.kind === 'audiooutput',
-      ) as Speakers[])
+    ? (devices.filter((x) => x.kind === 'audiooutput') as Speakers[])
     : []
   deviceWatchers.forEach((cb) =>
     cb({

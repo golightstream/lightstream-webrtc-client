@@ -132,6 +132,22 @@ export type RoomCommand =
       name: 'StopSendingMedia'
       payload: { mediaId: string }
     }
+  | {
+      name: 'SendChatMessage'
+      payload: {
+        to?: string // Peer ID
+        text: string
+        meta?: any
+      }
+    }
+
+export type ChatMessage = {
+  time: Date
+  from: string // Peer ID
+  private: boolean
+  text: string
+  meta?: any
+}
 
 export type RoomRequestEvent = {
   type: 'REQUEST'
@@ -142,7 +158,9 @@ export type RoomRequestEvent = {
 }
 
 // TODO: Type all request names and data
-type IncomingRequest = { name: string; data: any }
+type IncomingRequest =
+  | { name: string; data: any }
+  | { name: 'ReceiveChatMessage'; data: ChatMessage }
 
 export type RoomNotificationEvent = {
   type: 'NOTIFICATION'
@@ -184,6 +202,7 @@ export type RoomMachineEvent =
   | { type: 'SOCKET.FAILED' }
   | { type: 'SOCKET.DISCONNECTED' }
   | { type: 'SOCKET.CLOSED' }
+  | { type: 'CHAT_MESSAGE_ADDED'; message: ChatMessage }
   | { type: 'MEDIA.CLOSED'; mediaId: string }
   | { type: 'PEER_JOINED'; peer: Peer }
   | { type: 'PEER_LEFT'; peerId: string }
@@ -211,6 +230,7 @@ export interface RoomMachineContext {
   peerInfo: any
   peers: Peer[]
   media: Media[]
+  chat: ChatMessage[]
   protoo: ProtooPeer
   browser: Browser
   sendTransport: Transport
@@ -265,18 +285,14 @@ type CommandValue<T extends RoomCommand['name']> = Extract<
   { name: T }
 >
 
-type Payload<
-  T extends RoomCommand['name']
-> = CommandValue<T> extends {
+type Payload<T extends RoomCommand['name']> = CommandValue<T> extends {
   payload: unknown
 }
   ? CommandValue<T>['payload']
   : never
 
 type CommandAPI = {
-  [name in RoomCommand['name']]: (
-    payload: Payload<name>,
-  ) => void
+  [name in RoomCommand['name']]: (payload: Payload<name>) => void
 }
 
 type Disposable = () => void
@@ -307,16 +323,10 @@ export type Room = {
   onDiagnostics: RoomMachineContext['onDiagnostics']
   settings: RoomSettings
   getMedia: (mediaId: string) => MediaState
-  useMedia: (
-    mediaId: string,
-    cb: (media: MediaState) => void,
-  ) => Disposable
+  useMedia: (mediaId: string, cb: (media: MediaState) => void) => Disposable
   getState: () => RoomState
   useState: (cb: (room: RoomState) => void) => Disposable
-  watch: (
-    options: MediaWatchOptions,
-    cb: (media: Media) => void,
-  ) => Disposable
+  watch: (options: MediaWatchOptions, cb: (media: Media) => void) => Disposable
 } & CommandAPI
 
 export type Webcam = MediaDeviceInfo & {

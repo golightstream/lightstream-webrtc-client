@@ -42,6 +42,7 @@ _Commands_
 **room.ResumeMedia(`{ mediaId: string }`)**  
 **room.StopSendingMedia(`{ mediaId: string }`)**  
 **room.ModifyMedia(`{ constraints: MediaTrackConstraints }`)**  
+**room.SendChatMessage(`{ text: string, to?: string }`)**  
 **room.UpdatePeer(`{ data: any }`)**  
 **room.RestartIce()**
 

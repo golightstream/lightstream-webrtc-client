@@ -35,9 +35,7 @@ const WEBCAM_SIMULCAST_ENCODINGS = [
 ] as const
 
 // Used for VP9 webcam video.
-const WEBCAM_KSVC_ENCODINGS = [
-  { scalabilityMode: 'S3T3_KEY' },
-]
+const WEBCAM_KSVC_ENCODINGS = [{ scalabilityMode: 'S3T3_KEY' }]
 
 // Used for simulcast screen sharing.
 const SCREEN_SHARING_SIMULCAST_ENCODINGS = [
@@ -46,9 +44,7 @@ const SCREEN_SHARING_SIMULCAST_ENCODINGS = [
 ]
 
 // Used for VP9 screen sharing.
-const SCREEN_SHARING_SVC_ENCODINGS = [
-  { scalabilityMode: 'S3T3', dtx: true },
-]
+const SCREEN_SHARING_SVC_ENCODINGS = [{ scalabilityMode: 'S3T3', dtx: true }]
 
 // Informative events that are emitted but not saved as state
 const DIAGNOSTIC_NOTIFICATIONS = [
@@ -63,10 +59,7 @@ export const roomServices: MachineOptions<
 >['services'] = {
   notificationHandler: () => (sendBack, onReceive) =>
     onReceive(async (event) => {
-      const {
-        notification,
-        context,
-      } = event as RoomNotificationEvent
+      const { notification, context } = event as RoomNotificationEvent
       const onError = (reason: string) => {
         sendBack({
           type: 'NOTIFICATION_ERROR',
@@ -76,8 +69,7 @@ export const roomServices: MachineOptions<
       }
 
       console.log(
-        `Notification received: ` +
-          `%c${notification.name}`,
+        `Notification received: ` + `%c${notification.name}`,
         'color:#777;font-size:11px;',
         notification,
       )
@@ -125,12 +117,7 @@ export const roomServices: MachineOptions<
     }),
   requestHandler: () => (sendBack, onReceive) =>
     onReceive(async (event) => {
-      const {
-        request,
-        context,
-        accept,
-        reject,
-      } = event as RoomRequestEvent
+      const { request, context, accept, reject } = event as RoomRequestEvent
       const { recvTransport } = context
       console.log(
         `Request received: ` + `%c${request.name}`,
@@ -143,6 +130,14 @@ export const roomServices: MachineOptions<
          * Request handlers
          */
         switch (request.name) {
+          case 'ReceiveChatMessage': {
+            sendBack({
+              type: 'CHAT_MESSAGE_ADDED',
+              message: request.data,
+            })
+
+            return accept()
+          }
           case 'newConsumer': {
             const {
               peerId,
@@ -161,10 +156,7 @@ export const roomServices: MachineOptions<
               appData: { ...appData, peerId },
             })
             consumer.on('transportclose', () => {
-              console.log(
-                'Consumer transport closed',
-                consumer.id,
-              )
+              console.log('Consumer transport closed', consumer.id)
             })
 
             sendBack({
@@ -197,11 +189,9 @@ export const roomServices: MachineOptions<
         ...VIDEO_CONSTRAINTS[resolution || 'vga'],
         ...constraints,
       } as MediaTrackConstraints
-      const stream = await navigator.mediaDevices.getUserMedia(
-        {
-          video: _constraints,
-        },
-      )
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: _constraints,
+      })
       return stream.getVideoTracks()[0]
     }
     const getAudio = async ({
@@ -212,11 +202,9 @@ export const roomServices: MachineOptions<
         deviceId,
         ...constraints,
       } as MediaTrackConstraints
-      const stream = await navigator.mediaDevices.getUserMedia(
-        {
-          audio: _constraints,
-        },
-      )
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: _constraints,
+      })
       return stream.getAudioTracks()[0]
     }
 
@@ -234,11 +222,7 @@ export const roomServices: MachineOptions<
         'background-color:#c1ac12;color:#111;font-size:15px;font-weight:bold;',
         command,
       )
-      const {
-        protoo,
-        sendTransport,
-        mediasoupDevice,
-      } = context
+      const { protoo, sendTransport, mediasoupDevice } = context
 
       /**
        * Command handlers
@@ -251,8 +235,7 @@ export const roomServices: MachineOptions<
               return console.warn('Cannot produce audio')
             }
 
-            const track =
-              payload.track || (await getAudio(payload))
+            const track = payload.track || (await getAudio(payload))
             const producer = await sendTransport.produce({
               track,
               codecOptions: {
@@ -262,7 +245,7 @@ export const roomServices: MachineOptions<
               appData: {
                 type: payload.type || 'unknown',
                 deviceId: payload.deviceId,
-                label: payload.label || ''
+                label: payload.label || '',
               },
               // NOTE: for testing codec selection.
               // codec : mediasoupDevice.rtpCapabilities.codecs
@@ -293,8 +276,7 @@ export const roomServices: MachineOptions<
               return console.warn('Cannot produce video')
             }
 
-            const track =
-              payload.track || (await getVideo(payload))
+            const track = payload.track || (await getVideo(payload))
 
             let encodings
             let codec
@@ -303,8 +285,7 @@ export const roomServices: MachineOptions<
             }
             if (settings.forceH264) {
               codec = mediasoupDevice.rtpCapabilities.codecs.find(
-                (c) =>
-                  c.mimeType.toLowerCase() === 'video/h264',
+                (c) => c.mimeType.toLowerCase() === 'video/h264',
               )
               if (!codec) {
                 throw new Error(
@@ -313,8 +294,7 @@ export const roomServices: MachineOptions<
               }
             } else if (settings.forceVP9) {
               codec = mediasoupDevice.rtpCapabilities.codecs.find(
-                (c) =>
-                  c.mimeType.toLowerCase() === 'video/vp9',
+                (c) => c.mimeType.toLowerCase() === 'video/vp9',
               )
               if (!codec) {
                 throw new Error(
@@ -329,8 +309,7 @@ export const roomServices: MachineOptions<
               )
               if (
                 (settings.forceVP9 && codec) ||
-                firstVideoCodec.mimeType.toLowerCase() ===
-                  'video/vp9'
+                firstVideoCodec.mimeType.toLowerCase() === 'video/vp9'
               ) {
                 encodings = WEBCAM_KSVC_ENCODINGS
               } else {
@@ -347,7 +326,7 @@ export const roomServices: MachineOptions<
               appData: {
                 type: payload.type || 'unknown',
                 deviceId: payload.deviceId,
-                label: payload.label || ''
+                label: payload.label || '',
               },
             })
             if (!track) {
@@ -368,9 +347,7 @@ export const roomServices: MachineOptions<
           }
           case 'PauseMedia': {
             const { mediaId } = command.payload
-            const media = context.media.find(
-              (x) => x.id === mediaId,
-            )
+            const media = context.media.find((x) => x.id === mediaId)
             if (!media) return reject('Media not found')
             if (media.consumer) {
               await protoo.request('pauseConsumer', {
@@ -388,21 +365,17 @@ export const roomServices: MachineOptions<
           }
           case 'ResumeMedia': {
             const { mediaId } = command.payload
-            const media = context.media.find(
-              (x) => x.id === mediaId,
-            )
+            const media = context.media.find((x) => x.id === mediaId)
             if (!media) return reject('Media not found')
             if (media.consumer) {
-              if (media.consumer.closed)
-                return reject('Media is closed')
+              if (media.consumer.closed) return reject('Media is closed')
               await protoo.request('resumeConsumer', {
                 consumerId: media.consumer.id,
               })
               media.consumer.resume()
             }
             if (media.producer) {
-              if (media.producer.closed)
-                return reject('Media is closed')
+              if (media.producer.closed) return reject('Media is closed')
               await protoo.request('resumeProducer', {
                 producerId: media.producer.id,
               })
@@ -414,12 +387,9 @@ export const roomServices: MachineOptions<
           }
           case 'StopSendingMedia': {
             const { mediaId } = command.payload
-            const media = context.media.find(
-              (x) => x.id === mediaId,
-            )
+            const media = context.media.find((x) => x.id === mediaId)
             if (!media) return reject('Media not found')
-            if (!media.producer)
-              return reject('Media is not sending')
+            if (!media.producer) return reject('Media is not sending')
             await protoo.request('closeProducer', {
               producerId: media.producer.id,
             })
@@ -429,20 +399,12 @@ export const roomServices: MachineOptions<
             })
           }
           case 'SwitchVideo': {
-            const {
-              mediaId,
-              newDefinition,
-            } = command.payload
-            const media = context.media.find(
-              (x) => x.id === mediaId,
-            )
+            const { mediaId, newDefinition } = command.payload
+            const media = context.media.find((x) => x.id === mediaId)
             if (!media) return reject('Media not found')
-            if (!media.producer)
-              return reject('Media is not sending')
+            if (!media.producer) return reject('Media is not sending')
 
-            const track =
-              newDefinition.track ||
-              (await getVideo(newDefinition))
+            const track = newDefinition.track || (await getVideo(newDefinition))
 
             if (!track) {
               return reject('Failed to get video track')
@@ -453,20 +415,12 @@ export const roomServices: MachineOptions<
             })
           }
           case 'SwitchAudio': {
-            const {
-              mediaId,
-              newDefinition,
-            } = command.payload
-            const media = context.media.find(
-              (x) => x.id === mediaId,
-            )
+            const { mediaId, newDefinition } = command.payload
+            const media = context.media.find((x) => x.id === mediaId)
             if (!media) return reject('Media not found')
-            if (!media.producer)
-              return reject('Media is not sending')
+            if (!media.producer) return reject('Media is not sending')
 
-            const track =
-              newDefinition.track ||
-              (await getAudio(newDefinition))
+            const track = newDefinition.track || (await getAudio(newDefinition))
 
             if (!track) {
               return reject('Failed to get video track')
@@ -474,6 +428,21 @@ export const roomServices: MachineOptions<
             return media.actor.send({
               type: 'SWITCH',
               track,
+            })
+          }
+          case 'SendChatMessage': {
+            const { text, meta, to } = command.payload
+            if (!text) return reject('Chat message must contain text')
+
+            const message = await protoo.request('SendChatMessage', {
+              text,
+              meta,
+              to,
+            })
+
+            return sendBack({
+              type: 'CHAT_MESSAGE_ADDED',
+              message,
             })
           }
         }
@@ -535,8 +504,7 @@ export const roomServices: MachineOptions<
           data: request.data,
         },
         accept,
-        reject: (reason = 'Not available') =>
-          reject(403, reason),
+        reject: (reason = 'Not available') => reject(403, reason),
       }),
     )
 
@@ -550,8 +518,7 @@ export const roomServices: MachineOptions<
         notification.name,
       )
       if (isDiagnosticOnly) {
-        if (context.onDiagnostics)
-          context.onDiagnostics(notification)
+        if (context.onDiagnostics) context.onDiagnostics(notification)
       } else {
         sendBack({
           type: 'NOTIFICATION',
@@ -572,14 +539,11 @@ export const roomServices: MachineOptions<
     let recvTransport: Transport, sendTransport: Transport
     // Create mediasoup Transport for sending (unless we don't want to produce).
     if (settings.produce) {
-      const transportInfo = await protoo.request(
-        'createWebRtcTransport',
-        {
-          forceTcp: settings.forceTcp,
-          producing: true,
-          consuming: false,
-        },
-      )
+      const transportInfo = await protoo.request('createWebRtcTransport', {
+        forceTcp: settings.forceTcp,
+        producing: true,
+        consuming: false,
+      })
 
       const {
         id,
@@ -599,26 +563,19 @@ export const roomServices: MachineOptions<
         proprietaryConstraints: PC_PROPRIETARY_CONSTRAINTS,
       })
 
-      sendTransport.on(
-        'connect',
-        ({ dtlsParameters }, callback, errback) => {
-          protoo
-            .request('connectWebRtcTransport', {
-              transportId: sendTransport.id,
-              dtlsParameters,
-            })
-            .then(callback)
-            .catch(errback)
-        },
-      )
+      sendTransport.on('connect', ({ dtlsParameters }, callback, errback) => {
+        protoo
+          .request('connectWebRtcTransport', {
+            transportId: sendTransport.id,
+            dtlsParameters,
+          })
+          .then(callback)
+          .catch(errback)
+      })
 
       sendTransport.on(
         'produce',
-        async (
-          { kind, rtpParameters, appData },
-          callback,
-          errback,
-        ) => {
+        async ({ kind, rtpParameters, appData }, callback, errback) => {
           try {
             const { id } = await protoo.request('produce', {
               transportId: sendTransport.id,
@@ -635,14 +592,11 @@ export const roomServices: MachineOptions<
 
       // Create mediasoup Transport for receiving (unless we don't want to consume).
       if (settings.consume) {
-        const transportInfo = await protoo.request(
-          'createWebRtcTransport',
-          {
-            forceTcp: settings.forceTcp,
-            producing: false,
-            consuming: true,
-          },
-        )
+        const transportInfo = await protoo.request('createWebRtcTransport', {
+          forceTcp: settings.forceTcp,
+          producing: false,
+          consuming: true,
+        })
 
         const {
           id,
@@ -652,29 +606,24 @@ export const roomServices: MachineOptions<
           sctpParameters,
         } = transportInfo
 
-        recvTransport = mediasoupDevice.createRecvTransport(
-          {
-            id,
-            iceParameters,
-            iceCandidates,
-            dtlsParameters,
-            sctpParameters,
-            iceServers: [],
-          },
-        )
+        recvTransport = mediasoupDevice.createRecvTransport({
+          id,
+          iceParameters,
+          iceCandidates,
+          dtlsParameters,
+          sctpParameters,
+          iceServers: [],
+        })
 
-        recvTransport.on(
-          'connect',
-          ({ dtlsParameters }, callback, errback) => {
-            protoo
-              .request('connectWebRtcTransport', {
-                transportId: recvTransport.id,
-                dtlsParameters,
-              })
-              .then(callback)
-              .catch(errback)
-          },
-        )
+        recvTransport.on('connect', ({ dtlsParameters }, callback, errback) => {
+          protoo
+            .request('connectWebRtcTransport', {
+              transportId: recvTransport.id,
+              dtlsParameters,
+            })
+            .then(callback)
+            .catch(errback)
+        })
       }
 
       const myPeer = {
@@ -752,10 +701,8 @@ export const roomMachine = Machine<
                 target: 'connected',
                 actions: [
                   assign({
-                    protoo: (context, event) =>
-                      event.protoo,
-                    mediasoupDevice: (context, event) =>
-                      event.mediasoupDevice,
+                    protoo: (context, event) => event.protoo,
+                    mediasoupDevice: (context, event) => event.mediasoupDevice,
                   }),
                 ],
               },
@@ -804,20 +751,14 @@ export const roomMachine = Machine<
               },
               PEER_LEFT: {
                 actions: assign((context, event) => ({
-                  peers: context.peers.filter(
-                    (x) => x.id !== event.peerId,
-                  ),
-                  media: context.media.filter(
-                    (x) => x.peerId !== event.peerId,
-                  ),
+                  peers: context.peers.filter((x) => x.id !== event.peerId),
+                  media: context.media.filter((x) => x.peerId !== event.peerId),
                 })),
               },
               PEER_UPDATED: {
                 actions: assign((context, event) => ({
                   peers: context.peers.map((x) =>
-                    x.id !== event.peerId
-                      ? x
-                      : { ...x, info: event.info },
+                    x.id !== event.peerId ? x : { ...x, info: event.info },
                   ),
                 })),
               },
@@ -827,12 +768,13 @@ export const roomMachine = Machine<
               REMOTE_MEDIA_ADDED: {
                 actions: 'addMedia',
               },
+              CHAT_MESSAGE_ADDED: {
+                actions: 'addChatMessage',
+              },
               'MEDIA.CLOSED': {
                 actions: [
                   assign((context, event) => ({
-                    media: context.media.filter(
-                      (x) => x.id !== event.mediaId,
-                    ),
+                    media: context.media.filter((x) => x.id !== event.mediaId),
                   })),
                   (context, event) => {
                     context.media
@@ -853,11 +795,9 @@ export const roomMachine = Machine<
                   src: 'performJoin',
                   onDone: {
                     target: 'joined',
-                    actions: assign(
-                      (context, event: any) => ({
-                        ...event.data,
-                      }),
-                    ),
+                    actions: assign((context, event: any) => ({
+                      ...event.data,
+                    })),
                   },
                   onError: {
                     target: 'waiting',
@@ -925,15 +865,15 @@ export const roomMachine = Machine<
           ...context.media,
           {
             ...event.media,
-            actor: spawn(
-              mediaMachine.withContext(event.media),
-              {
-                sync: true,
-                name: event.media.id,
-              },
-            ) as MediaActor,
+            actor: spawn(mediaMachine.withContext(event.media), {
+              sync: true,
+              name: event.media.id,
+            }) as MediaActor,
           },
         ],
+      })),
+      addChatMessage: assign((context, event: any) => ({
+        chat: [...context.chat, event.message],
       })),
     },
   },
