@@ -859,6 +859,7 @@ export const roomMachine = Machine<
       reset: assign((context) => ({
         peers: [],
         media: [],
+        chat: [],
       })),
       addMedia: assign((context, event: any) => ({
         media: [
