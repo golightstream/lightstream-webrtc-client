@@ -77,15 +77,11 @@ type RoomConfig = {
   port?: number
 }
 
-export const startRoom = ({
-  id,
-  peerId,
-  peerInfo = {},
-  settings = {},
-  hostname,
-  port,
-}: RoomConfig) => {
-  if (id && rooms.get(id)) return rooms.get(id)
+export const startRoom = (
+  { id, peerId, peerInfo = {}, settings = {}, hostname, port }: RoomConfig,
+  forceCreate = false,
+) => {
+  if (!forceCreate && id && rooms.get(id)) return rooms.get(id)
   id = id || generateID()
   peerId = peerId || generateID()
 
