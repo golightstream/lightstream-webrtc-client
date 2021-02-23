@@ -10,7 +10,7 @@ esbuild
     format: 'esm',
     minify: true,
     bundle: true,
-    sourcemap: false,
+    sourcemap: true,
     globalName: 'window',
     tsconfig: './tsconfig.json',
     target: 'es6',

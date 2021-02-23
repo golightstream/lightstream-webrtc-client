@@ -1,8 +1,4 @@
-import {
-  assign,
-  Machine,
-  sendParent,
-} from 'xstate'
+import { assign, Machine, sendParent } from 'xstate'
 
 import {
   MediaMachineContext,
@@ -38,7 +34,7 @@ export const mediaMachine = Machine<
           },
           {
             id: 'Producer',
-            src: 'producer',
+            src: 'producerOrConsumer',
           },
         ],
         on: {
@@ -63,7 +59,7 @@ export const mediaMachine = Machine<
               },
               {
                 target: 'live',
-              }
+              },
             ],
           },
           live: {
@@ -131,13 +127,16 @@ export const mediaMachine = Machine<
   {
     guards: {
       isPaused: (context) =>
-        context?.producer?.paused ||
-        context?.consumer?.paused,
+        context?.producer?.paused || context?.consumer?.paused,
     },
     actions: {
       close: (context) => {
-        context.consumer?.close()
-        context.producer?.close()
+        if (context.consumer && !context.consumer.closed) {
+          context.consumer?.close()
+        }
+        if (context.producer && !context.producer.closed) {
+          context.producer?.close()
+        }
       },
     },
     services: {
@@ -151,8 +150,13 @@ export const mediaMachine = Machine<
         })
         return { track: event.track }
       },
-      producer: (context) => (sendBack, onReceive) => {
+      producerOrConsumer: (context) => (sendBack, onReceive) => {
         context.producer?.on('close', () =>
+          sendBack({
+            type: 'CLOSED',
+          }),
+        )
+        context.consumer?.on('close', () =>
           sendBack({
             type: 'CLOSED',
           }),
@@ -167,15 +171,11 @@ export const mediaMachine = Machine<
               type: 'TRACK.METADATA_FAILURE',
             })
           }),
-          useListener(
-            track,
-            'unmuted' as EventName,
-            (e) => {
-              sendBack({
-                type: 'TRACK.METADATA_RESOLVED',
-              })
-            },
-          ),
+          useListener(track, 'unmuted' as EventName, (e) => {
+            sendBack({
+              type: 'TRACK.METADATA_RESOLVED',
+            })
+          }),
           useListener(track, 'ended' as EventName, (e) => {
             sendBack({
               type: 'TRACK.ENDED',

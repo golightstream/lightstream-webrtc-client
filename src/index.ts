@@ -203,6 +203,7 @@ export type RoomMachineEvent =
   | { type: 'SOCKET.DISCONNECTED' }
   | { type: 'SOCKET.CLOSED' }
   | { type: 'CHAT_MESSAGE_ADDED'; message: ChatMessage }
+  | { type: 'CONSUMER_CLOSED'; consumerId: string }
   | { type: 'MEDIA.CLOSED'; mediaId: string }
   | { type: 'PEER_JOINED'; peer: Peer }
   | { type: 'PEER_LEFT'; peerId: string }

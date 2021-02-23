@@ -107,7 +107,10 @@ export const roomServices: MachineOptions<
           }
           case 'consumerClosed': {
             const { consumerId } = notification.data
-            return send('CLOSED', { to: consumerId })
+            return sendBack({
+              type: 'CONSUMER_CLOSED',
+              consumerId,
+            })
           }
         }
       } catch (e) {
@@ -771,16 +774,19 @@ export const roomMachine = Machine<
               CHAT_MESSAGE_ADDED: {
                 actions: 'addChatMessage',
               },
+              CONSUMER_CLOSED: {
+                actions: [
+                  send('CLOSED', {
+                    to: (context, event) =>
+                      context.media.find((x) => x.id === event.consumerId)?.actor,
+                  }),
+                ],
+              },
               'MEDIA.CLOSED': {
                 actions: [
                   assign((context, event) => ({
                     media: context.media.filter((x) => x.id !== event.mediaId),
                   })),
-                  (context, event) => {
-                    context.media
-                      .filter((x) => x.id === event.mediaId)
-                      .forEach((x) => x.actor.stop())
-                  },
                 ],
               },
             },
