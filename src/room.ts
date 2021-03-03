@@ -592,67 +592,67 @@ export const roomServices: MachineOptions<
           }
         },
       )
+    }
 
-      // Create mediasoup Transport for receiving (unless we don't want to consume).
-      if (settings.consume) {
-        const transportInfo = await protoo.request('createWebRtcTransport', {
-          forceTcp: settings.forceTcp,
-          producing: false,
-          consuming: true,
-        })
-
-        const {
-          id,
-          iceParameters,
-          iceCandidates,
-          dtlsParameters,
-          sctpParameters,
-        } = transportInfo
-
-        recvTransport = mediasoupDevice.createRecvTransport({
-          id,
-          iceParameters,
-          iceCandidates,
-          dtlsParameters,
-          sctpParameters,
-          iceServers: [],
-        })
-
-        recvTransport.on('connect', ({ dtlsParameters }, callback, errback) => {
-          protoo
-            .request('connectWebRtcTransport', {
-              transportId: recvTransport.id,
-              dtlsParameters,
-            })
-            .then(callback)
-            .catch(errback)
-        })
-      }
-
-      const myPeer = {
-        id: context.peerId,
-        info: context.peerInfo,
-        device: context.browser,
-      }
-
-      // Join now into the room.
-      // NOTE: Don't send our RTP capabilities if we don't want to consume.
-      let { peers } = await protoo.request('join', {
-        ...myPeer,
-        consuming: settings.consume,
-        producing: settings.produce,
-        rtpCapabilities: settings.consume
-          ? mediasoupDevice.rtpCapabilities
-          : undefined,
+    // Create mediasoup Transport for receiving (unless we don't want to consume).
+    if (settings.consume) {
+      const transportInfo = await protoo.request('createWebRtcTransport', {
+        forceTcp: settings.forceTcp,
+        producing: false,
+        consuming: true,
       })
-      peers = [...peers, myPeer]
 
-      return {
-        peers,
-        sendTransport,
-        recvTransport,
-        mediasoupDevice,
-      }
+      const {
+        id,
+        iceParameters,
+        iceCandidates,
+        dtlsParameters,
+        sctpParameters,
+      } = transportInfo
+
+      recvTransport = mediasoupDevice.createRecvTransport({
+        id,
+        iceParameters,
+        iceCandidates,
+        dtlsParameters,
+        sctpParameters,
+        iceServers: [],
+      })
+
+      recvTransport.on('connect', ({ dtlsParameters }, callback, errback) => {
+        protoo
+          .request('connectWebRtcTransport', {
+            transportId: recvTransport.id,
+            dtlsParameters,
+          })
+          .then(callback)
+          .catch(errback)
+      })
+    }
+
+    const myPeer = {
+      id: context.peerId,
+      info: context.peerInfo,
+      device: context.browser,
+    }
+
+    // Join now into the room.
+    // NOTE: Don't send our RTP capabilities if we don't want to consume.
+    let { peers } = await protoo.request('join', {
+      ...myPeer,
+      consuming: settings.consume,
+      producing: settings.produce,
+      rtpCapabilities: settings.consume
+        ? mediasoupDevice.rtpCapabilities
+        : undefined,
+    })
+    peers = [...peers, myPeer]
+
+    return {
+      peers,
+      sendTransport,
+      recvTransport,
+      mediasoupDevice,
     }
   },
   performLeave: async (context) => {
@@ -778,7 +778,8 @@ export const roomMachine = Machine<
                 actions: [
                   send('CLOSED', {
                     to: (context, event) =>
-                      context.media.find((x) => x.id === event.consumerId)?.actor,
+                      context.media.find((x) => x.id === event.consumerId)
+                        ?.actor,
                   }),
                 ],
               },
